@@ -1,0 +1,33 @@
+{
+  "name": "http2human",
+  "version": "1.0.0",
+  "description": "http2human tries to translate http errors for human use. It wraps `fetch` promises and returns standardized errors.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/superseriouscompany/http2human.git"
+  },
+  "keywords": [
+    "http",
+    "fetch",
+    "errors",
+    "client",
+    "wrapper"
+  ],
+  "author": "Neil Sarkar and Super Serious Company",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/superseriouscompany/http2human/issues"
+  },
+  "homepage": "https://github.com/superseriouscompany/http2human#readme",
+  "devDependencies": {
+    "expect": "^1.20.2",
+    "mocha": "^3.1.2"
+  }
+}
