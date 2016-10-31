@@ -18,6 +18,11 @@ describe('http2human', function() {
     app.get('/json4xxnakedAlternate', function(req, res) { res.status(422).send(JSON.stringify({message: 'nope'})) });
     app.post('/json4xxwrapped', function(req, res) { res.status(409).send(JSON.stringify({error: {message: 'nope'}})) });
 
+    app.get('/text5xx', function(req, res) { res.status(500).send('wrong')});
+    app.get('/json5xxnaked', function(req, res) { res.status(502).send(JSON.stringify({error: 'nope'})) });
+    app.get('/json5xxnakedAlternate', function(req, res) { res.status(503).send(JSON.stringify({message: 'nope'})) });
+    app.post('/json5xxwrapped', function(req, res) { res.status(504).send(JSON.stringify({error: {message: 'nope'}})) });
+
     app.listen(port);
   })
 
@@ -63,7 +68,7 @@ describe('http2human', function() {
         }).catch(done);
       });
 
-      it('parses json error like {"error": "nope"}', function(done) {
+      it('parses json error like {"message": "nope"}', function(done) {
         h2h('http://localhost:6969/json4xxnakedAlternate').then(done).catch(function(err) {
           expect(err.name).toEqual('UserError');
           expect(err.suggestion).toEqual('nope');
@@ -73,7 +78,7 @@ describe('http2human', function() {
         }).catch(done);
       })
 
-      it('parses json error like {"message": "nope"}', function(done) {
+      it('parses json error like {"error": "nope"}', function(done) {
         h2h('http://localhost:6969/json4xxnaked').then(done).catch(function(err) {
           expect(err.name).toEqual('UserError');
           expect(err.suggestion).toEqual('nope');
@@ -88,6 +93,48 @@ describe('http2human', function() {
           expect(err.name).toEqual('UserError');
           expect(err.suggestion).toEqual('nope');
           expect(err.statusCode).toEqual(409);
+          expect(err.responseBody).toEqual({error: {message: 'nope'}});
+          done();
+        }).catch(done);
+      })
+    })
+
+    describe('server errors', function() {
+      it('parses and tags', function (done) {
+        h2h('http://localhost:6969/text5xx').then(done).catch(function(err) {
+          expect(err.name).toEqual('ServerError');
+          expect(err.suggestion).toEqual('wrong');
+          expect(err.statusCode).toEqual(500);
+          expect(err.responseBody).toEqual({rawText: 'wrong'});
+          done();
+        }).catch(done);
+      });
+
+      it('parses json error like {"error": "nope"}', function(done) {
+        h2h('http://localhost:6969/json5xxnaked').then(done).catch(function(err) {
+          expect(err.name).toEqual('ServerError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(502);
+          expect(err.responseBody).toEqual({error: 'nope'});
+          done();
+        }).catch(done);
+      })
+
+      it('parses json error like {"message": "nope"}', function(done) {
+        h2h('http://localhost:6969/json5xxnakedAlternate').then(done).catch(function(err) {
+          expect(err.name).toEqual('ServerError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(503);
+          expect(err.responseBody).toEqual({message: 'nope'});
+          done();
+        }).catch(done);
+      })
+
+      it('parses json error like {"error": {"message": "nope"}}', function(done) {
+        h2h('http://localhost:6969/json5xxwrapped', {method: 'POST'}).then(done).catch(function(err) {
+          expect(err.name).toEqual('ServerError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(504);
           expect(err.responseBody).toEqual({error: {message: 'nope'}});
           done();
         }).catch(done);
