@@ -54,8 +54,14 @@ In order to pass through the user facing suggestion from your API, the format of
 }
 ```
 
+```js
+{
+  "error": "foo"
+}
+```
+
 ```text
 foo
 ```
 
-If `fetch` is not available in your environment, http2human will use https://github.com/github/fetch
+If `fetch` is not available in your environment, http2human will use https://github.com/bitinn/node-fetch
