@@ -44,8 +44,13 @@ module.exports = function http2human(url, params) {
       return response.text().then(function(text) {
         let body = false;
         try {
-          body = JSON.parse(text)
-          text = body.message || (body.error && body.error.message);
+          body = JSON.parse(text);
+          text = body.message;
+          if( body.error ) {
+            text = typeof body.error === 'string' ?
+              body.error :
+              body.error.message || body.message;
+          }
         } catch(err) {
           if( err.name == 'SyntaxError' ) { console.warn('Unable to parse json', text); }
         }

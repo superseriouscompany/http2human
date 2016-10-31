@@ -13,6 +13,11 @@ describe('http2human', function() {
     app.get('/json201', function(req, res) { res.send(JSON.stringify({created: true})); });
     app.get('/text201', function(req, res) { res.sendStatus(201) });
 
+    app.get('/text4xx', function(req, res) { res.status(400).send('wrong')});
+    app.get('/json4xxnaked', function(req, res) { res.status(422).send(JSON.stringify({error: 'nope'})) });
+    app.get('/json4xxnakedAlternate', function(req, res) { res.status(422).send(JSON.stringify({message: 'nope'})) });
+    app.post('/json4xxwrapped', function(req, res) { res.status(409).send(JSON.stringify({error: {message: 'nope'}})) });
+
     app.listen(port);
   })
 
@@ -43,6 +48,50 @@ describe('http2human', function() {
         expect(response).toEqual('Created');
         done();
       }).catch(done);
+    })
+  })
+
+  describe('errors', function() {
+    describe('user errors', function() {
+      it('parses and tags', function (done) {
+        h2h('http://localhost:6969/text4xx').then(done).catch(function(err) {
+          expect(err.name).toEqual('UserError');
+          expect(err.suggestion).toEqual('wrong');
+          expect(err.statusCode).toEqual(400);
+          expect(err.responseBody).toEqual({rawText: 'wrong'});
+          done();
+        }).catch(done);
+      });
+
+      it('parses json error like {"error": "nope"}', function(done) {
+        h2h('http://localhost:6969/json4xxnakedAlternate').then(done).catch(function(err) {
+          expect(err.name).toEqual('UserError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(422);
+          expect(err.responseBody).toEqual({message: 'nope'});
+          done();
+        }).catch(done);
+      })
+
+      it('parses json error like {"message": "nope"}', function(done) {
+        h2h('http://localhost:6969/json4xxnaked').then(done).catch(function(err) {
+          expect(err.name).toEqual('UserError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(422);
+          expect(err.responseBody).toEqual({error: 'nope'});
+          done();
+        }).catch(done);
+      })
+
+      it('parses json error like {"error": {"message": "nope"}}', function(done) {
+        h2h('http://localhost:6969/json4xxwrapped', {method: 'POST'}).then(done).catch(function(err) {
+          expect(err.name).toEqual('UserError');
+          expect(err.suggestion).toEqual('nope');
+          expect(err.statusCode).toEqual(409);
+          expect(err.responseBody).toEqual({error: {message: 'nope'}});
+          done();
+        }).catch(done);
+      })
     })
   })
 })
