@@ -23,6 +23,8 @@ describe('http2human', function() {
     app.get('/json5xxnakedAlternate', function(req, res) { res.status(503).send(JSON.stringify({message: 'nope'})) });
     app.post('/json5xxwrapped', function(req, res) { res.status(504).send(JSON.stringify({error: {message: 'nope'}})) });
 
+    app.get('/timeout', function(req, res) { setTimeout(function() { res.send('ok')}, 10000)});
+
     app.listen(port);
   })
 
@@ -136,6 +138,16 @@ describe('http2human', function() {
           expect(err.suggestion).toEqual('nope');
           expect(err.statusCode).toEqual(504);
           expect(err.responseBody).toEqual({error: {message: 'nope'}});
+          done();
+        }).catch(done);
+      })
+    })
+
+    describe('timeouts', function() {
+      it('respects timeout parameter', function(done) {
+        this.timeout(200);
+        h2h('http://localhost:6969/timeout', null, 100).then(done).catch(function(err) {
+          expect(err.name).toEqual('TimeoutError');
           done();
         }).catch(done);
       })
