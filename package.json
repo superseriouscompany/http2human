@@ -28,6 +28,11 @@
   "homepage": "https://github.com/superseriouscompany/http2human#readme",
   "devDependencies": {
     "expect": "^1.20.2",
-    "mocha": "^3.1.2"
+    "express": "^4.14.0",
+    "mocha": "^3.1.2",
+    "request": "^2.76.0"
+  },
+  "dependencies": {
+    "node-fetch": "^1.6.3"
   }
 }

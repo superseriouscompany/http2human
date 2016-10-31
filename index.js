@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  *
  * @param  {[type]} url    [description]
@@ -5,7 +7,9 @@
  * @callback {Error} err
  *
  *
- * http2human formats all errors in a standard way. only the name field is guaranteed to be populated.
+ * http2human wraps a `fetch` request and formats all errors in a standard way.
+ *
+ * Fields provided (only name is guaranteed):
  *
  * err.name         - ServerError, UserError, NetworkError, LowLevelError
  * err.suggestion   - (if available) suggestion from server as to resolution steps
@@ -16,15 +20,28 @@
 // TODO: ClientNetworkError, ServerNetworkError
 // TODO: TimeoutError
 // TODO: http2human.retry(), http2human.cancel(), http2human.backoff()
-function trudge(url, params) {
-  return fetch(url, params).then(function(response) {
+// TODO: use whatwg-fetch
+module.exports = function http2human(url, params) {
+  let fetchPolyfill;
+  if( typeof fetch === 'undefined' ) {
+    fetchPolyfill = require('node-fetch');
+  }
+
+  return fetchPolyfill(url, params).then(function(response) {
     if( response.ok ) {
-      // FIXME: with json parse failure, fall back to regular text
-      return response.json();
+      let text;
+      return response.text().then(function(text) {
+        try {
+          const body = JSON.parse(text);
+          return body;
+        } catch(err) {
+          return text;
+        }
+      })
     }
 
     if( response.status >= 400 && response.status < 500 ) {
-      return response.text().then((text) => {
+      return response.text().then(function(text) {
         let body = false;
         try {
           body = JSON.parse(text)
@@ -39,14 +56,14 @@ function trudge(url, params) {
         err.suggestion = text;
         err.name = 'UserError';
         throw err;
-      }).catch((err) => {
+      }).catch(function(err) {
         if( err.name != 'UserError' ) err.name = 'LowLevelError';
         throw err;
       })
     }
 
     if( response.status >= 500 ) {
-      return response.text().then((text) => {
+      return response.text().then(function(text) {
         let body = false;
         try {
           body = JSON.parse(text)
@@ -61,7 +78,7 @@ function trudge(url, params) {
         err.suggestion = text;
         err.name = 'ServerError';
         throw err;
-      }).catch((err) => {
+      }).catch(function(err) {
         if( err.name != 'ServerError' ) err.name = 'LowLevelError';
         throw err;
       })
