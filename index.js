@@ -77,8 +77,6 @@ module.exports = function http2human(url, params, ttl) {
     }).catch(function(err) {
       if( cancelled ) { return; }
       timeout && clearTimeout(timeout);
-
-      // TODO: ClientNetworkError, ServerNetworkError
       if( err.message == 'Network request failed' ) {
         err.name = 'NetworkError';
       }
